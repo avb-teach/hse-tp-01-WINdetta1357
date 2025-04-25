@@ -1,7 +1,10 @@
-import os, sys, shutil
+import os
+import shutil
+import sys
 
 def f(i, o, m=None):
     d = {}
+    
     def u(p, fn):
         if p not in d:
             d[p] = {}
@@ -12,6 +15,7 @@ def f(i, o, m=None):
         else:
             d[p][fn] = 1
             return fn
+    
     def r(c, rel):
         if m is None:
             tgt = o
@@ -22,10 +26,12 @@ def f(i, o, m=None):
                 tgt = o
         if not os.path.exists(tgt):
             os.makedirs(tgt)
+        
         if rel:
             rl = rel.split(os.sep)
         else:
             rl = []
+        
         for x in os.scandir(c):
             if x.is_file():
                 n = x.name
@@ -49,23 +55,24 @@ def f(i, o, m=None):
                         shutil.copy(x.path, lt)
             else:
                 if x.is_dir():
-                    if rel:
-                        nr = os.path.join(rel, x.name)
-                    else:
-                        nr = x.name
+                    nr = os.path.join(rel, x.name) if rel else x.name
                     r(x.path, nr)
+
     r(i, "")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python collect_files.py <input_dir> <output_dir> [max_depth]")
         sys.exit(1)
+    
     ii = sys.argv[1]
     oo = sys.argv[2]
     mm = None
+    
     if len(sys.argv) > 3:
         try:
             mm = int(sys.argv[3])
         except:
             mm = None
+    
     f(ii, oo, mm)
