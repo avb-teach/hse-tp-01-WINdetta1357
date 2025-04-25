@@ -3,40 +3,17 @@ import sys
 import shutil
 
 def f(i, o, m=None):
-    d = {}
-
-    def u(p, fn):
-        if p not in d:
-            d[p] = {}
-        if fn in d[p]:
-            d[p][fn] += 1
-            b, e = os.path.splitext(fn)
-            return b + "_" + str(d[p][fn]) + e
-        else:
-            d[p][fn] = 1
-            return fn
-
     def r(c, rel):
         depth = len(rel.split(os.sep)) if rel else 0
 
-        if m is None:
-            tgt = os.path.join(o, rel) if rel else o
-        else:
-            if rel:
-                tgt = os.path.join(o, rel)
-            else:
-                tgt = o
-
-        if not os.path.exists(tgt):
-            os.makedirs(tgt)
+        tgt = os.path.join(o, rel) if rel else o
+        os.makedirs(tgt, exist_ok=True)
 
         rl = rel.split(os.sep) if rel else []
 
-        for x in os.scandir(c):
+        for x in sorted(os.scandir(c), key=lambda e: e.name):
             if x.is_file():
-                n = x.name
-                nn = u(tgt, n)
-                t = os.path.join(tgt, nn)
+                t = os.path.join(tgt, x.name)
                 shutil.copy(x.path, t)
 
                 if m is not None and depth >= m:
@@ -45,27 +22,16 @@ def f(i, o, m=None):
                     else:
                         new_rel = ""
 
-                    if new_rel:
-                        lift_dir = os.path.join(o, new_rel)
-                    else:
-                        lift_dir = o
+                    lift_dir = os.path.join(o, new_rel) if new_rel else o
+                    os.makedirs(lift_dir, exist_ok=True)
 
-                    if not os.path.exists(lift_dir):
-                        os.makedirs(lift_dir)
-
-                    nn2 = u(lift_dir, n)
-                    lt = os.path.join(lift_dir, nn2)
+                    lt = os.path.join(lift_dir, x.name)
                     shutil.copy(x.path, lt)
 
             elif x.is_dir():
                 if m is not None and depth >= m:
                     continue
-
-                if rel:
-                    nr = os.path.join(rel, x.name)
-                else:
-                    nr = x.name
-
+                nr = os.path.join(rel, x.name) if rel else x.name
                 r(x.path, nr)
 
     r(i, "")
@@ -77,12 +43,5 @@ if __name__ == "__main__":
 
     ii = sys.argv[1]
     oo = sys.argv[2]
-
-    mm = None
-    if len(sys.argv) > 3:
-        try:
-            mm = int(sys.argv[3])
-        except:
-            mm = None
-
+    mm = int(sys.argv[3]) if len(sys.argv) > 3 else None
     f(ii, oo, mm)
