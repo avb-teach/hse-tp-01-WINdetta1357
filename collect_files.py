@@ -1,35 +1,67 @@
 import os
-import shutil
 import sys
 
-def collect_files(input_dir, output_dir):
-    file_count = {}
+def collect_files(INPUT_DIR, outDir):
+    fileCountMap = dict()
+    keysList = []
 
-    def process_directory(directory):
-        for entry in os.scandir(directory):
-            if entry.is_file():
-                base_name = entry.name
-                if base_name in file_count:
-                    file_count[base_name] += 1
-                    name, ext = os.path.splitext(base_name)
-                    base_name = f"{name}_{file_count[base_name]}{ext}"
+    def get_name_ext(filename):
+        parts = filename.split('.')
+        if len(parts) == 1:
+            return filename, ''
+        else:
+            ext = '.' + parts[-1]
+            name = '.'.join(parts[:-1])
+            return name, ext
+
+    def processDir(dir1):
+        entries = os.scandir(dir1)
+        for e in entries:
+            if e.is_file():
+                fullFileName = e.name
+                originalName = fullFileName
+
+                if fullFileName in keysList:
+                    fileCountMap[fullFileName] = fileCountMap[fullFileName] + 1
+                    namePart, extPart = get_name_ext(fullFileName)
+                    fullFileName = namePart + "_" + str(fileCountMap[originalName]) + extPart
                 else:
-                    file_count[base_name] = 1
-                shutil.copy(entry.path, os.path.join(output_dir, base_name))
-            elif entry.is_dir():
-                process_directory(entry.path)
+                    fileCountMap[fullFileName] = 1
+                    keysList.append(fullFileName)
 
-    process_directory(input_dir)
+                srcPath = e.path
+                destName = fullFileName
+                destPath = outDir + '/' + destName
+
+                print("Копирую файл: " + destName)
+
+                with open(srcPath, 'rb') as f1:
+                    data = f1.read()
+                with open(destPath, 'wb') as f2:
+                    f2.write(data)
+
+            elif e.is_dir():
+                nameOfDir = e.path
+                callAgain(nameOfDir)
+
+    def callAgain(x1):
+        processDir(x1)
+
+    callAgain(INPUT_DIR)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
+    totalArguments = len(sys.argv)
+
+    if totalArguments < 3:
         print("Использование: python collect_files.py /path/to/input_dir /path/to/output_dir")
         sys.exit(1)
 
-    input_dir = sys.argv[1]
-    output_dir = sys.argv[2]
+    inpPath = sys.argv[1]
+    outPath = sys.argv[2]
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    exists = os.path.exists(outPath)
+    if exists == False:
+        os.mkdir(outPath)
 
-    collect_files(input_dir, output_dir)
+    collect_files(inpPath, outPath)
+
