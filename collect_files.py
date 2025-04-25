@@ -19,13 +19,18 @@ def f(i, o, m=None):
     def r(c, rel):
         depth = len(rel.split(os.sep)) if rel else 0
 
-        if m is not None and depth >= m:
-            return 
-
-        tgt = os.path.join(o, rel) if rel else o
+        if m is None:
+            tgt = os.path.join(o, rel) if rel else o
+        else:
+            if rel:
+                tgt = os.path.join(o, rel)
+            else:
+                tgt = o
 
         if not os.path.exists(tgt):
             os.makedirs(tgt)
+
+        rl = rel.split(os.sep) if rel else []
 
         for x in os.scandir(c):
             if x.is_file():
@@ -34,8 +39,33 @@ def f(i, o, m=None):
                 t = os.path.join(tgt, nn)
                 shutil.copy(x.path, t)
 
+                if m is not None and depth >= m:
+                    if m > 1:
+                        new_rel = os.path.join(*rl[-(m - 1):])
+                    else:
+                        new_rel = ""
+
+                    if new_rel:
+                        lift_dir = os.path.join(o, new_rel)
+                    else:
+                        lift_dir = o
+
+                    if not os.path.exists(lift_dir):
+                        os.makedirs(lift_dir)
+
+                    nn2 = u(lift_dir, n)
+                    lt = os.path.join(lift_dir, nn2)
+                    shutil.copy(x.path, lt)
+
             elif x.is_dir():
-                nr = os.path.join(rel, x.name) if rel else x.name
+                if m is not None and depth >= m:
+                    continue
+
+                if rel:
+                    nr = os.path.join(rel, x.name)
+                else:
+                    nr = x.name
+
                 r(x.path, nr)
 
     r(i, "")
@@ -47,8 +77,8 @@ if __name__ == "__main__":
 
     ii = sys.argv[1]
     oo = sys.argv[2]
-    mm = None
 
+    mm = None
     if len(sys.argv) > 3:
         try:
             mm = int(sys.argv[3])
