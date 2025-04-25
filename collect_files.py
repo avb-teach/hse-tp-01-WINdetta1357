@@ -1,34 +1,47 @@
 import os
-import shutil
 import sys
+import shutil
 
-def collect_files(input_dir, output_dir, max_depth=None):
-    file_count = {}
-
-    def process_directory(directory, depth=1):
-        if max_depth is not None and depth > max_depth:
-            return
-        for entry in os.scandir(directory):
-            if entry.is_file():
-                base_name = entry.name
-                if base_name in file_count:
-                    file_count[base_name] += 1
-                    name, ext = os.path.splitext(base_name)
-                    base_name = f"{name}_{file_count[base_name]}{ext}"
+def a(b, c, d=None):
+    e = {}
+    def f(g, h=""):
+        lst = list(os.scandir(g))
+        for i in range(len(lst)):
+            j = lst[i]
+            if j.is_file():
+                k = j.name
+                if k in e:
+                    e[k] = e[k] + 1
+                    m, n = os.path.splitext(k)
+                    k = m + "_" + str(e[k]) + n
                 else:
-                    file_count[base_name] = 1
-                shutil.copy(entry.path, os.path.join(output_dir, base_name))
-            elif entry.is_dir():
-                process_directory(entry.path, depth + 1)
-    process_directory(input_dir)
+                    e[k] = 1
+                p = os.path.join(c, h, k)
+                shutil.copy(j.path, p)
+                if d is not None:
+                    q = os.path.join(h, k)
+                    r = q.split(os.sep)
+                    if len(r) > d:
+                        s = os.path.join(*r[-d:])
+                        t = os.path.join(c, s)
+                        u = os.path.dirname(t)
+                        if not os.path.exists(u):
+                            os.makedirs(u)
+                        shutil.copy(j.path, t)
+            elif j.is_dir():
+                v = os.path.join(h, j.name) if h != "" else j.name
+                f(j.path, v)
+    f(b, "")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Использование: python collect_files.py /path/to/input_dir /path/to/output_dir [max_depth]")
+        print("Usage: python collect_files.py <input_dir> <output_dir> [max_depth]")
         sys.exit(1)
-    input_dir = sys.argv[1]
-    output_dir = sys.argv[2]
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    max_depth = int(sys.argv[3]) if len(sys.argv) > 3 else None
-    collect_files(input_dir, output_dir, max_depth)
+    w = sys.argv[1]
+    x = sys.argv[2]
+    if not os.path.exists(x):
+        os.makedirs(x)
+    y = None
+    if len(sys.argv) > 3:
+        y = int(sys.argv[3])
+    a(w, x, y)
