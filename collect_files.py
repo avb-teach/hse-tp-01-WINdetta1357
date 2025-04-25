@@ -1,7 +1,7 @@
 import os
 import sys
 
-def collect_files(INPUT_DIR, outDir):
+def collect_files(INPUT_DIR, outDir, MAX_DEPTH):
     fileCountMap = dict()
     keysList = []
 
@@ -14,7 +14,9 @@ def collect_files(INPUT_DIR, outDir):
             name = '.'.join(parts[:-1])
             return name, ext
 
-    def processDir(dir1):
+    def processDir(dir1, currentDepth):
+        if currentDepth > MAX_DEPTH:
+            return
         entries = os.scandir(dir1)
         for e in entries:
             if e.is_file():
@@ -30,10 +32,9 @@ def collect_files(INPUT_DIR, outDir):
                     keysList.append(fullFileName)
 
                 srcPath = e.path
-                destName = fullFileName
-                destPath = outDir + '/' + destName
+                destPath = outDir + '/' + fullFileName
 
-                print("Копирую файл: " + destName)
+                print("Копирую файл: " + fullFileName)
 
                 with open(srcPath, 'rb') as f1:
                     data = f1.read()
@@ -41,27 +42,19 @@ def collect_files(INPUT_DIR, outDir):
                     f2.write(data)
 
             elif e.is_dir():
-                nameOfDir = e.path
-                callAgain(nameOfDir)
+                callAgain(e.path, currentDepth + 1)
 
-    def callAgain(x1):
-        processDir(x1)
+    def callAgain(x1, d):
+        processDir(x1, d)
 
-    callAgain(INPUT_DIR)
+    callAgain(INPUT_DIR, 0)
 
 if __name__ == "__main__":
-    totalArguments = len(sys.argv)
-
-    if totalArguments < 3:
-        print("Использование: python collect_files.py /path/to/input_dir /path/to/output_dir")
-        sys.exit(1)
-
     inpPath = sys.argv[1]
     outPath = sys.argv[2]
+    depthInt = int(sys.argv[3])
 
-    exists = os.path.exists(outPath)
-    if exists == False:
+    if not os.path.exists(outPath):
         os.mkdir(outPath)
 
-    collect_files(inpPath, outPath)
-
+    collect_files(inpPath, outPath, depthInt)
