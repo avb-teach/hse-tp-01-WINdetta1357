@@ -40,12 +40,17 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Использование: python collect_files.py /path/to/input_dir /path/to/output_dir [max_depth]")
         sys.exit(1)
+    
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
-    max_depth = int(sys.argv[3]) if len(sys.argv) > 3 else None
+    
+    # если есть на максдепх, если он есть
+    if len(sys.argv) > 3:
+        max_depth = int(sys.argv[3])
+    else:
+        max_depth = None
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     collect_files(input_dir, output_dir, max_depth)
-
