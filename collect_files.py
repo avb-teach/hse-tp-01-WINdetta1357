@@ -1,54 +1,55 @@
-import shutil
-import sys
-import os
+import os, sys, shutil
 
-def process_all_files(input_dir, output_dir, max_depth=None):
+def f(i, o, m=None):
     d = {}
+    def u(p, fn):
+        if p not in d:
+            d[p] = {}
+        if fn in d[p]:
+            d[p][fn] += 1
+            b, e = os.path.splitext(fn)
+            return b + "_" + str(d[p][fn]) + e
+        else:
+            d[p][fn] = 1
+            return fn
+    def r(c, rel):
 
-    def process_directory(directory, rel_path="", current_depth=1):
-        o = os.path.join(output_dir, rel_path)
-        if not os.path.exists(o):
-            os.makedirs(o)
-        for entry in os.scandir(directory):
-            if entry.is_file():
-                base_name = entry.name
-                count = d.count(base_name)
-                if count > 0:
-                    name, ext = os.path.splitext(base_name)
-                    base_name = f"{name}_{count+1}{ext}"
-                d.append(base_name)
-                target_file = os.path.join(o, base_name)
-                shutil.copy(entry.path, target_file)
-                if max_depth is not None:
-                    full_rel = os.path.join(rel_path, base_name)
-                    parts = full_rel.split(os.sep)
-                    if len(parts) > max_depth:
-                        lifted_rel = os.path.join(*parts[-max_depth:])
-                        lifted_target = os.path.join(output_dir, lifted_rel)
-                        lifted_dir = os.path.dirname(lifted_target)
-                        if not os.path.exists(lifted_dir):
-                            os.makedirs(lifted_dir)
-                        shutil.copy(entry.path, lifted_target)
-            elif entry.is_dir():
-                if rel_path:
-                    new_rel = os.path.join(rel_path, entry.name)
-                else:
-                    new_rel = entry.name
-                if new_rel:
-                    process_directory(entry.path, new_rel, current_depth + 1)
-                else:
-                    new_rel = entry.name
-                    process_directory(entry.path, new_rel, current_depth + 1)
+        tgt = o if m is None else (os.path.join(o, rel) if rel else o)
+        if not os.path.exists(tgt):
+            os.makedirs(tgt)
     
-    process_directory(input_dir)
+        rl = rel.split(os.sep) if rel else []
+        for x in os.scandir(c):
+            if x.is_file():
+                n = x.name
+                nn = u(tgt, n)
+                t = os.path.join(tgt, nn)
+                shutil.copy(x.path, t)
+           
+                if m is not None and len(rl) >= m:
+         
+                    new_rel = os.path.join(*rl[-(m - 1):]) if m > 1 else ""
+                    lift_dir = os.path.join(o, new_rel)
+                    if not os.path.exists(lift_dir):
+                        os.makedirs(lift_dir)
+                    nn2 = u(lift_dir, n)
+                    lt = os.path.join(lift_dir, nn2)
+                    shutil.copy(x.path, lt)
+            elif x.is_dir():
+                nr = os.path.join(rel, x.name) if rel else x.name
+                r(x.path, nr)
+    r(i, "")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Использование: python collect_files.py /path/to/input_dir /path/to/output_dir [max_depth]")
+        print("Usage: python collect_files.py <input_dir> <output_dir> [max_depth]")
         sys.exit(1)
-    a = sys.argv[1]
-    b = sys.argv[2]
-    if not os.path.exists(b):
-        os.makedirs(b)
-    c = int(sys.argv[3]) if len(sys.argv) > 3 else None
-    process_all_files(a, b, c)
+    ii = sys.argv[1]
+    oo = sys.argv[2]
+    mm = None
+    if len(sys.argv) > 3:
+        try:
+            mm = int(sys.argv[3])
+        except:
+            mm = None
+    f(ii, oo, mm)
